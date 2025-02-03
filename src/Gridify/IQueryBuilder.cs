@@ -55,6 +55,9 @@ public interface IQueryBuilder<T>
    IQueryBuilder<T> AddQuery(IGridifyQuery gridifyQuery);
 
    IQueryBuilder<T> AddOrderBy(string orderBy);
+
+   IQueryBuilder<T> AddProjection(string select);
+
    IQueryBuilder<T> ConfigurePaging(int page, int pageSize);
    IQueryBuilder<T> ConfigureDefaultMapper(GridifyMapperConfiguration mapperConfiguration);
    IQueryBuilder<T> ConfigureDefaultMapper(Action<GridifyMapperConfiguration> mapperConfiguration);

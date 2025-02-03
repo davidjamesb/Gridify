@@ -1,13 +1,15 @@
+using Gridify.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gridify.Syntax;
 
 namespace Gridify.Builder;
 
 public abstract class BaseSortingQueryBuilder<TSortingQuery, T>(IGridifyMapper<T>? mapper = null)
 {
    protected IGridifyMapper<T>? Mapper = mapper;
+
+   protected abstract TSortingQuery ApplyProjection(TSortingQuery query, IEnumerable<ParsedProjection> projections);
 
    protected abstract TSortingQuery ApplySorting(TSortingQuery query, ParsedOrdering ordering);
 
@@ -44,6 +46,26 @@ public abstract class BaseSortingQueryBuilder<TSortingQuery, T>(IGridifyMapper<T
       return query;
    }
 
+   public TSortingQuery ProcessProjection(TSortingQuery query, string projection)
+   {
+      var parsed = projection.ParseProjection().ToList();
+      Mapper ??= BuildMapper(parsed);
+
+      foreach (var select in parsed)
+      {
+         if (!Mapper.HasMap(select.MemberName))
+         {
+            // skip if there is no mappings available
+            if (Mapper.Configuration.IgnoreNotMappedFields)
+               continue;
+
+            throw new GridifyMapperException($"Mapping '{select.MemberName}' not found");
+         }
+      }
+
+      return ApplyProjection(query, parsed);
+   }
+
    private static GridifyMapper<T> BuildMapper(List<ParsedOrdering> orderings)
    {
       var mapper = new GridifyMapper<T>();
@@ -57,6 +79,25 @@ public abstract class BaseSortingQueryBuilder<TSortingQuery, T>(IGridifyMapper<T
          {
             if (!mapper.Configuration.IgnoreNotMappedFields)
                throw new GridifyMapperException($"Mapping '{order.MemberName}' not found");
+         }
+      }
+
+      return mapper;
+   }
+
+   private static GridifyMapper<T> BuildMapper(List<ParsedProjection> projections)
+   {
+      var mapper = new GridifyMapper<T>();
+      foreach (var projection in projections)
+      {
+         try
+         {
+            mapper.AddMap(projection.MemberName);
+         }
+         catch (Exception)
+         {
+            if (!mapper.Configuration.IgnoreNotMappedFields)
+               throw new GridifyMapperException($"Mapping '{projection.MemberName}' not found");
          }
       }
 

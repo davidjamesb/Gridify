@@ -1,9 +1,9 @@
+using Gridify.Builder;
+using Gridify.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Gridify.Syntax;
-using Gridify.Builder;
 
 namespace Gridify;
 
@@ -12,6 +12,7 @@ public class QueryBuilder<T> : IQueryBuilder<T>
    private readonly List<string> _conditionList = [];
    private IGridifyMapper<T>? _mapper;
    private string _orderBy = string.Empty;
+   private string _select = string.Empty;
    private (int page, int pageSize)? _paging;
 
    /// <inheritdoc />
@@ -70,6 +71,13 @@ public class QueryBuilder<T> : IQueryBuilder<T>
    public IQueryBuilder<T> AddOrderBy(string orderBy)
    {
       _orderBy = string.IsNullOrEmpty(_orderBy) ? orderBy : $"{_orderBy}, {orderBy}";
+      return this;
+   }
+
+   /// <inheritdoc />
+   public IQueryBuilder<T> AddProjection(string select)
+   {
+      _select = string.IsNullOrEmpty(_select) ? select : $"{_select}, {select}";
       return this;
    }
 
@@ -170,6 +178,12 @@ public class QueryBuilder<T> : IQueryBuilder<T>
             IGridifyOrdering gq = new GridifyQuery() { OrderBy = _orderBy };
             isValid = isValid && gq.IsValid(_mapper);
          }
+
+         if (!string.IsNullOrWhiteSpace(_select))
+         {
+            IGridifyOrdering gq = new GridifyQuery() { Select = _select };
+            isValid = isValid && gq.IsValid(_mapper);
+         }
       }
       catch (Exception)
       {
@@ -238,6 +252,9 @@ public class QueryBuilder<T> : IQueryBuilder<T>
 
       if (!string.IsNullOrEmpty(_orderBy))
          query = query.ApplyOrdering(_orderBy, _mapper);
+
+      if (!string.IsNullOrEmpty(_select))
+         query = query.ApplyProjection(_select, _mapper);
 
       if (_paging.HasValue)
          query = query.Skip(_paging.Value.page * _paging.Value.pageSize).Take(_paging.Value.pageSize);

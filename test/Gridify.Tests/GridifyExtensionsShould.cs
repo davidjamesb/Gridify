@@ -998,6 +998,44 @@ public class GridifyExtensionsShould
 
    #endregion
 
+   #region "ApplyProjection"
+
+   [Fact]
+   public void ApplyProjection_SingleSelect()
+   {
+      var gq = new GridifyQuery { Select = "id" };
+      var actual = _fakeRepository.AsQueryable()
+         .ApplyProjection(gq)
+         .ToList();
+
+      var actualIds = actual.Select(x => x.Id);
+      var actualNames = actual.Select(x => x.Name);
+      var expectedIds = _fakeRepository.Select(x => x.Id).ToList();
+      var expectedNames = _fakeRepository.Select(x => x.Name).ToList();
+
+      Assert.Equal(expectedIds, actualIds);
+      Assert.NotEqual(expectedNames, actualNames);
+   }
+
+   [Fact]
+   public void ApplyProjection_MultipleSelect()
+   {
+      var gq = new GridifyQuery { Select = "id,name" };
+      var actual = _fakeRepository.AsQueryable()
+         .ApplyProjection(gq)
+         .ToList();
+
+      var actualIds = actual.Select(x => x.Id);
+      var actualNames = actual.Select(x => x.Name);
+      var expectedIds = _fakeRepository.Select(x => x.Id).ToList();
+      var expectedNames = _fakeRepository.Select(x => x.Name).ToList();
+
+      Assert.Equal(expectedIds, actualIds);
+      Assert.Equal(expectedNames, actualNames);
+   }
+
+   #endregion
+
    #region "Other"
 
    [Fact]

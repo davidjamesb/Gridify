@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
 using Elastic.Clients.Elasticsearch;
 using Gridify.Builder;
 using Gridify.Syntax;
+using System;
+using System.Collections.Generic;
 
 namespace Gridify.Elasticsearch;
 
@@ -15,6 +15,13 @@ internal class ElasticsearchSortOptionsBuilder<T> : BaseSortingQueryBuilder<ICol
    internal ICollection<SortOptions> Build(string ordering)
    {
       return ProcessOrdering(new List<SortOptions>(), ordering, false);
+   }
+
+
+   /// <inheritdoc />
+   protected override ICollection<SortOptions> ApplyProjection(ICollection<SortOptions> sortOptions, IEnumerable<ParsedProjection> projections)
+   {
+      throw new NotImplementedException();
    }
 
    protected override ICollection<SortOptions> ApplySorting(ICollection<SortOptions> sortOptions, ParsedOrdering ordering)

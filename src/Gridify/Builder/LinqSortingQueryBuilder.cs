@@ -1,12 +1,19 @@
+using Gridify.Syntax;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Gridify.Syntax;
 
 namespace Gridify.Builder;
 
 public class LinqSortingQueryBuilder<T>(IGridifyMapper<T>? mapper = null) : BaseSortingQueryBuilder<IQueryable<T>, T>(mapper)
 {
+   /// <inheritdoc />
+   protected override IQueryable<T> ApplyProjection(IQueryable<T> query, IEnumerable<ParsedProjection> projections)
+   {
+      return query.SelectByMember(projections.Select(x => Mapper!.GetExpression(x.MemberName)));
+   }
+
    protected override IQueryable<T> ApplySorting(IQueryable<T> query, ParsedOrdering ordering)
    {
       return query.OrderByMember(GetOrderExpression(ordering), ordering.IsAscending);
