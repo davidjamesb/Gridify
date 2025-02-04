@@ -1001,7 +1001,7 @@ public class GridifyExtensionsShould
    #region "ApplyProjection"
 
    [Fact]
-   public void ApplyProjection_SingleSelect()
+   public void ApplyProjection_SameModelAsSource_SingleSelect()
    {
       var gq = new GridifyQuery { Select = "id" };
       var actual = _fakeRepository.AsQueryable()
@@ -1010,6 +1010,7 @@ public class GridifyExtensionsShould
 
       var actualIds = actual.Select(x => x.Id);
       var actualNames = actual.Select(x => x.Name);
+
       var expectedIds = _fakeRepository.Select(x => x.Id).ToList();
       var expectedNames = _fakeRepository.Select(x => x.Name).ToList();
 
@@ -1018,7 +1019,7 @@ public class GridifyExtensionsShould
    }
 
    [Fact]
-   public void ApplyProjection_MultipleSelect()
+   public void ApplyProjection_SameModelAsSource_MultipleSelect()
    {
       var gq = new GridifyQuery { Select = "id,name" };
       var actual = _fakeRepository.AsQueryable()
@@ -1027,6 +1028,38 @@ public class GridifyExtensionsShould
 
       var actualIds = actual.Select(x => x.Id);
       var actualNames = actual.Select(x => x.Name);
+
+      var expectedIds = _fakeRepository.Select(x => x.Id).ToList();
+      var expectedNames = _fakeRepository.Select(x => x.Name).ToList();
+
+      Assert.Equal(expectedIds, actualIds);
+      Assert.Equal(expectedNames, actualNames);
+   }
+
+   [Fact]
+   public void ApplyProjection_DifferentModelFromSource_SingleSelect()
+   {
+      var gq = new GridifyQuery { Select = "name" };
+      var actual = _fakeRepository.AsQueryable()
+         .ApplyProjection<TestClass, SingleFieldProjectedTestClass>(gq)!
+         .ToList();
+
+      var actualNames = actual.Select(x => x.Name);
+      var expectedNames = _fakeRepository.Select(x => x.Name).ToList();
+      Assert.Equal(expectedNames, actualNames);
+   }
+
+   [Fact]
+   public void ApplyProjection_DifferentModelFromSource_MultipleSelect()
+   {
+      var gq = new GridifyQuery { Select = "id,name" };
+      var actual = _fakeRepository.AsQueryable()
+         .ApplyProjection<TestClass, MultiFieldProjectedTestClass>(gq)!
+         .ToList();
+
+      var actualIds = actual.Select(x => x.Id);
+      var actualNames = actual.Select(x => x.Name);
+
       var expectedIds = _fakeRepository.Select(x => x.Id).ToList();
       var expectedNames = _fakeRepository.Select(x => x.Name).ToList();
 

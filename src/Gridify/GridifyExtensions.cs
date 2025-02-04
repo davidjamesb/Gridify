@@ -161,17 +161,16 @@ public static partial class GridifyExtensions
 
       foreach (var expression in expressions)
       {
-         if (expression.Body is MemberExpression memberExpression)
+         switch (expression.Body)
          {
-            selectedProperties.Add(memberExpression.Member.Name);
-         }
-         else if (expression.Body is UnaryExpression { Operand: MemberExpression unaryMemberExpression })
-         {
-            selectedProperties.Add(unaryMemberExpression.Member.Name);
-         }
-         else
-         {
-            throw new ArgumentException("Unsupported expression type.");
+            case MemberExpression memberExpression:
+               selectedProperties.Add(memberExpression.Member.Name);
+               break;
+            case UnaryExpression { Operand: MemberExpression unaryMemberExpression }:
+               selectedProperties.Add(unaryMemberExpression.Member.Name);
+               break;
+            default:
+               throw new ArgumentException("Unsupported expression type.");
          }
       }
 
@@ -184,6 +183,43 @@ public static partial class GridifyExtensions
 
       var newExpressionBody = Expression.MemberInit(Expression.New(typeof(T)), bindings);
       var lambda = Expression.Lambda<Func<T, T>>(newExpressionBody, parameter);
+
+      return query.Select(lambda);
+   }
+
+   public static IQueryable<TResult> SelectByMember<T, TResult>(
+      this IQueryable<T> query,
+      IEnumerable<Expression<Func<T, object>>> expressions) where TResult : new()
+   {
+      var selectedProperties = new HashSet<string>();
+
+      foreach (var expression in expressions)
+      {
+         switch (expression.Body)
+         {
+            case MemberExpression memberExpression:
+               selectedProperties.Add(memberExpression.Member.Name);
+               break;
+            case UnaryExpression { Operand: MemberExpression unaryMemberExpression }:
+               selectedProperties.Add(unaryMemberExpression.Member.Name);
+               break;
+            default:
+               throw new ArgumentException("Unsupported expression type.");
+         }
+      }
+
+      var parameter = Expression.Parameter(typeof(T), "x");
+      var bindings = typeof(TResult)
+         .GetProperties()
+         .Where(p => selectedProperties.Contains(p.Name) && typeof(T).GetProperty(p.Name) != null)
+         .Select(p => Expression.Bind(p, Expression.Property(parameter, typeof(T).GetProperty(p.Name)!)))
+         .ToList();
+
+      if (!bindings.Any())
+         throw new InvalidOperationException("No matching properties found between T and TResult.");
+
+      var newExpressionBody = Expression.MemberInit(Expression.New(typeof(TResult)), bindings);
+      var lambda = Expression.Lambda<Func<T, TResult>>(newExpressionBody, parameter);
 
       return query.Select(lambda);
    }
@@ -303,14 +339,6 @@ public static partial class GridifyExtensions
          : new LinqSortingQueryBuilder<T>(mapper).ProcessOrdering(query, orderBy, startWithThenBy);
    }
 
-   public static IQueryable<T> ApplyProjection<T>(this IQueryable<T> query, IGridifyProjection? gridifyProjection, IGridifyMapper<T>? mapper = null)
-   {
-      if (gridifyProjection == null) return query;
-      return string.IsNullOrWhiteSpace(gridifyProjection.Select)
-         ? query
-         : new LinqSortingQueryBuilder<T>(mapper).ProcessProjection(query, gridifyProjection.Select!);
-   }
-
    internal static IEnumerable<ParsedProjection> ParseProjection(this string select)
    {
       var nullableChars = new[] { '?', '!' };
@@ -324,11 +352,33 @@ public static partial class GridifyExtensions
       }
    }
 
+   public static IQueryable<T> ApplyProjection<T>(this IQueryable<T> query, IGridifyProjection? gridifyProjection, IGridifyMapper<T>? mapper = null)
+   {
+      if (gridifyProjection == null) return query;
+      return string.IsNullOrWhiteSpace(gridifyProjection.Select)
+         ? query
+         : new LinqSortingQueryBuilder<T>(mapper).ProcessProjection(query, gridifyProjection.Select!);
+   }
+
+   public static IQueryable<TResult>? ApplyProjection<T, TResult>(this IQueryable<T> query, IGridifyProjection? gridifyProjection, IGridifyMapper<T>? mapper = null) where TResult : new()
+   {
+      return gridifyProjection == null || string.IsNullOrWhiteSpace(gridifyProjection.Select)
+         ? null
+         : new LinqSortingQueryBuilder<T>(mapper).ProcessProjection<TResult>(query, gridifyProjection.Select!);
+   }
+
    public static IQueryable<T> ApplyProjection<T>(this IQueryable<T> query, string select, IGridifyMapper<T>? mapper = null)
    {
       return string.IsNullOrWhiteSpace(select)
          ? query
          : new LinqSortingQueryBuilder<T>(mapper).ProcessProjection(query, select);
+   }
+
+   public static IQueryable<TResult>? ApplyProjection<T, TResult>(this IQueryable<T> query, string select, IGridifyMapper<T>? mapper = null) where TResult : new()
+   {
+      return string.IsNullOrWhiteSpace(select)
+         ? null
+         : new LinqSortingQueryBuilder<T>(mapper).ProcessProjection<TResult>(query, select);
    }
 
    public static IQueryable<object> ApplySelect<T>(this IQueryable<T> query, string props, IGridifyMapper<T>? mapper = null)

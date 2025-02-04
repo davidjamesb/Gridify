@@ -3,6 +3,7 @@ using Gridify.Builder;
 using Gridify.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gridify.Elasticsearch;
 
@@ -20,6 +21,12 @@ internal class ElasticsearchSortOptionsBuilder<T> : BaseSortingQueryBuilder<ICol
 
    /// <inheritdoc />
    protected override ICollection<SortOptions> ApplyProjection(ICollection<SortOptions> sortOptions, IEnumerable<ParsedProjection> projections)
+   {
+      throw new NotImplementedException();
+   }
+
+   /// <inheritdoc />
+   protected override IQueryable<TResult> ApplyProjection<TResult>(ICollection<SortOptions> query, IEnumerable<ParsedProjection> projections)
    {
       throw new NotImplementedException();
    }

@@ -14,6 +14,12 @@ public class LinqSortingQueryBuilder<T>(IGridifyMapper<T>? mapper = null) : Base
       return query.SelectByMember(projections.Select(x => Mapper!.GetExpression(x.MemberName)));
    }
 
+   /// <inheritdoc />
+   protected override IQueryable<TResult> ApplyProjection<TResult>(IQueryable<T> query, IEnumerable<ParsedProjection> projections)
+   {
+      return query.SelectByMember<T, TResult>(projections.Select(x => Mapper!.GetExpression(x.MemberName)));
+   }
+
    protected override IQueryable<T> ApplySorting(IQueryable<T> query, ParsedOrdering ordering)
    {
       return query.OrderByMember(GetOrderExpression(ordering), ordering.IsAscending);

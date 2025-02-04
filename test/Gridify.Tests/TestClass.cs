@@ -5,45 +5,45 @@ namespace Gridify.Tests;
 
 public class TestClass : ICloneable
 {
-   public TestClass()
-   {
-   }
+    public TestClass()
+    {
+    }
 
-   public TestClass(int id, string name, TestClass? classProp, Guid myGuid = default, DateTime? date = default, string? tag = "",
-      bool isActive = false)
-   {
-      Id = id;
-      Name = name;
-      ChildClass = classProp;
-      MyGuid = myGuid;
-      MyDateTime = date;
-      Tag = tag;
-      IsActive = isActive;
-   }
+    public TestClass(int id, string name, TestClass? classProp, Guid myGuid = default, DateTime? date = default, string? tag = "",
+       bool isActive = false)
+    {
+        Id = id;
+        Name = name;
+        ChildClass = classProp;
+        MyGuid = myGuid;
+        MyDateTime = date;
+        Tag = tag;
+        IsActive = isActive;
+    }
 
-   public int Id { get; set; }
-   public string? Name { get; set; } = string.Empty;
-   public TestClass? ChildClass { get; set; }
-   public DateTime? MyDateTime { get; set; }
-   public DateTime AnotherDateTime { get; set; }
-   public Guid MyGuid { get; set; }
-   public string? Tag { get; set; }
+    public int Id { get; set; }
+    public string? Name { get; set; } = string.Empty;
+    public TestClass? ChildClass { get; set; }
+    public DateTime? MyDateTime { get; set; }
+    public DateTime AnotherDateTime { get; set; }
+    public Guid MyGuid { get; set; }
+    public string? Tag { get; set; }
 
-   public bool IsActive { get; set; }
+    public bool IsActive { get; set; }
 
-   public ICollection<TestClass> Children { get; set; } = new List<TestClass>();
+    public ICollection<TestClass> Children { get; set; } = new List<TestClass>();
 
-   public object Clone()
-   {
-      return new TestClass
-      {
-         Id = Id,
-         Name = Name,
-         ChildClass = (TestClass)ChildClass?.Clone()!,
-         MyGuid = MyGuid,
-         Tag = Tag,
-         MyDateTime = MyDateTime,
-         IsActive = IsActive
-      };
-   }
+    public object Clone()
+    {
+        return new TestClass
+        {
+            Id = Id,
+            Name = Name,
+            ChildClass = (TestClass)ChildClass?.Clone()!,
+            MyGuid = MyGuid,
+            Tag = Tag,
+            MyDateTime = MyDateTime,
+            IsActive = IsActive
+        };
+    }
 }
